@@ -1,0 +1,19 @@
+---
+- name: Terminate an EC2 instance
+  hosts: localhost
+  gather_facts: False
+  vars:
+    ansible_python_interpreter: /home/ubuntu/ansible_ec2/.env/bin/python
+    aws_access_key: "{{ lookup('env', 'AWS_ACCESS_KEY') }}"
+    aws_secret_key: "{{ lookup('env', 'AWS_SECRET_KEY') }}"
+    region: "eu-north-1"
+    instance_id: "i-0e32b513f9ea549e2"
+  tasks:
+    - name: Terminate instance
+      amazon.aws.ec2_instance:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: "{{ region }}"
+        instance_ids:
+          - "{{ instance_id }}"  # Replace with your instance ID
+        state: absent

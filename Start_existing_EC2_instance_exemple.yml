@@ -1,0 +1,23 @@
+- name: Start existing EC2 instance
+  hosts: localhost
+  gather_facts: False
+  vars:
+    ansible_python_interpreter: /home/ubuntu/ansible_ec2/.env/bin/python
+    aws_access_key: "YOUR_AWS_ACCESS_KEY"
+    aws_secret_key: "YOUR_AWS_SECRET_KEY"
+    region: "eu-north-1"
+    instance_id: "i-019121f00c2e4447b"  # Replace with your instance ID
+  tasks:
+    - name: Start EC2 instance
+      amazon.aws.ec2_instance:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: "{{ region }}"
+        instance_ids: ["{{ instance_id }}"]
+        state: running
+      register: ec2_instance_result
+
+    - name: Display result
+      debug:
+        var: ec2_instance_result
+

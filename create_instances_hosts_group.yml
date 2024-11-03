@@ -1,0 +1,53 @@
+- name: Create EC2 instance
+  hosts: localhost
+  gather_facts: False
+  vars:
+    ansible_python_interpreter: /home/ubuntu/ansible_ec2/.env/bin/python
+  tasks:
+    - name: Launch a new EC2 instance   #Elle utilise le module amazon.aws.ec2_instance d'Ansible pour lancer une nouvelle instance EC2.
+                                         #Des paramètres comme aws_access_key, aws_secret_key, key_name, instance_type, image_id, count, tags et region sont spécifiés.
+      amazon.aws.ec2_instance:
+        aws_access_key: "{{ lookup('env', 'AWS_ACCESS_KEY') }}"
+        aws_secret_key: "{{ lookup('env', 'AWS_SECRET_KEY') }}"
+        key_name: key_pub_ec2
+        instance_type: t3.nano
+        image_id: ami-0506d6d51f1916a96
+        wait: yes
+        count: 1
+        tags:
+          Name: Ansible_EC2
+        region: eu-north-1
+      register: ec2                                          #Le résultat est enregistré dans la variable ec2.
+
+    - name: Add new instance to host group
+      add_host:   #Elle boucle à travers chaque instance dans ec2.instances et ajoute l'adresse IP publique au groupe.
+        hostname: "{{ item.public_ip }}"
+        groupname: launched
+      loop: "{{ ec2.instances }}"
+      when: item.public_ip is defined  # Check if public_ip is defined
+
+    - name: Wait for SSH to come up
+      wait_for:   #Elle attend que SSH soit disponible sur la nouvelle instance.
+        host: "{{ item.public_ip }}"
+        port: 22
+        delay: 60
+        timeout: 320
+        state: started
+      loop: "{{ ec2.instances }}"
+      when: item.public_ip is defined  # Check if public_ip is defined
+
+    - name: Ensure instance is running
+      amazon.aws.ec2_instance_info:
+        aws_access_key: "{{ lookup('env', 'AWS_ACCESS_KEY') }}"
+        aws_secret_key: "{{ lookup('env', 'AWS_SECRET_KEY') }}"
+        region: eu-north-1
+        filters:
+          instance-state-name: running #Elle vérifie si l'instance est dans l'état "running"
+      register: ec2_info    #Cela est fait en utilisant le module amazon.aws.ec2_instance_info avec un filtre sur l'état de l'instance.
+                            #Le résultat est enregistré dans la variable ec2_info.
+      become_method: sudo
+      
+
+    - name: Debug EC2 Info
+      debug:
+        var: ec2_info   #Elle affiche simplement le contenu de la variable ec2_info à des fins de débogage.

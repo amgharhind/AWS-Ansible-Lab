@@ -1,0 +1,22 @@
+- name: Start an existing EC2 instance
+  hosts: localhost
+  gather_facts: False
+  vars:
+    ansible_python_interpreter: /home/ubuntu/ansible_ec2/.env/bin/python  # Spécifie le chemin vers l'interpréteur Python utilisé par Ansible.
+    aws_access_key:  "{{ lookup('env', 'AWS_ACCESS_KEY') }}"
+    aws_secret_key: "{{ lookup('env', 'AWS_SECRET_KEY') }}"   #Les clés d'accès AWS utilisées pour authentifier l'accès aux services AWS.
+    region: "eu-north-1"
+    instance_id: "i-0e32b513f9ea549e2"
+
+  tasks:
+    - name: Start instance
+      amazon.aws.ec2_instance:
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: "{{ region }}"
+        instance_ids:
+          - "{{ instance_id }}"
+        state: running #Indique que l'état de l'instance doit être "running" après l'exécution de cette tâche.
+      become: yes  # Cela indique qu'Ansible doit exécuter cette tâche en tant qu'utilisateur avec les privilèges de superutilisateur.
+      become_method: sudo  #la méthode à utiliser pour obtenir les privilèges de superutilisateur.
+

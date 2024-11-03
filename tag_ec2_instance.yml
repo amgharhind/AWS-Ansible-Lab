@@ -1,0 +1,14 @@
+---
+- name: Tag an existing EC2 instance
+  hosts: localhost
+  gather_facts: False
+  tasks:
+    - name: Tag instance
+      ec2_tag:
+        region: us-east-1
+        resource: i-0abcdef1234567890  # Replace with your instance ID
+        state: present
+        tags:
+          Environment: Development
+          Department: IT
+
